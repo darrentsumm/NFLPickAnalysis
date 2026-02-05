@@ -1,0 +1,29 @@
+# --- Security ---
+.env
+.streamlit/secrets.toml
+**/*.env
+
+# --- Python ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# --- Virtual Environments ---
+.venv/
+venv/
+env/
+bin/
+etc/
+Projects/
+lib/
+share/
+
+# --- Mac OS ---
+.DS_Store
+
+# --- IDE Settings ---
+.vscode/
+.idea/
+
+pyvenv.cfg
