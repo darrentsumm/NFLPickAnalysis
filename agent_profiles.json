@@ -1,0 +1,119 @@
+{
+    "200Proof": {
+        "forgetfulness": 0.137,
+        "contrarian_index": 0.227,
+        "recency_weight": 0.12,
+        "mnf_bias_pts": -4.8,
+        "spread_bins": {
+            "heavy_away_fav": 0.308,
+            "heavy_home_fav": 0.591,
+            "mod_away_fav": 0.485,
+            "mod_home_fav": 0.489,
+            "slight_away_fav": 0.593,
+            "slight_home_fav": 0.6,
+            "solid_away_fav": 0.667,
+            "solid_home_fav": 0.524
+        },
+        "team_bias": {
+            "CLE": 0.259,
+            "IND": 0.227,
+            "KC": -0.227,
+            "LAC": 0.233,
+            "NE": 0.343,
+            "NYG": 0.242,
+            "SF": -0.207,
+            "TB": -0.24
+        }
+    },
+    "49ers203": {
+        "forgetfulness": 0.0,
+        "contrarian_index": 0.1,
+        "recency_weight": 0.238,
+        "mnf_bias_pts": -3.1,
+        "spread_bins": {
+            "heavy_away_fav": 0.308,
+            "heavy_home_fav": 0.6,
+            "mod_away_fav": 0.135,
+            "mod_home_fav": 0.68,
+            "slight_away_fav": 0.452,
+            "slight_home_fav": 0.413,
+            "solid_away_fav": 0.222,
+            "solid_home_fav": 0.5
+        },
+        "team_bias": {
+            "BAL": -0.259,
+            "DAL": -0.306,
+            "NYJ": 0.262,
+            "SEA": -0.201,
+            "SF": 0.31
+        }
+    },
+    "54Myers": {
+        "forgetfulness": 0.0,
+        "contrarian_index": 0.092,
+        "recency_weight": 0.481,
+        "mnf_bias_pts": -7.1,
+        "spread_bins": {
+            "heavy_away_fav": 0.308,
+            "heavy_home_fav": 0.8,
+            "mod_away_fav": 0.081,
+            "mod_home_fav": 0.74,
+            "slight_away_fav": 0.419,
+            "slight_home_fav": 0.522,
+            "solid_away_fav": 0.111,
+            "solid_home_fav": 0.792
+        },
+        "team_bias": {
+            "GB": 0.247,
+            "MIN": 0.31
+        }
+    },
+    "6Shooter": {
+        "forgetfulness": 0.063,
+        "contrarian_index": 0.185,
+        "recency_weight": 0.167,
+        "mnf_bias_pts": -4.2,
+        "spread_bins": {
+            "heavy_away_fav": 0.308,
+            "heavy_home_fav": 0.2,
+            "mod_away_fav": 0.161,
+            "mod_home_fav": 0.714,
+            "slight_away_fav": 0.4,
+            "slight_home_fav": 0.442,
+            "solid_away_fav": 0.222,
+            "solid_home_fav": 0.636
+        },
+        "team_bias": {
+            "CIN": -0.211,
+            "DAL": 0.436,
+            "KC": 0.382,
+            "LAC": -0.292,
+            "NE": -0.309,
+            "SEA": 0.261,
+            "TEN": 0.231
+        }
+    },
+    "AaronZ": {
+        "forgetfulness": 0.0,
+        "contrarian_index": 0.092,
+        "recency_weight": 0.337,
+        "mnf_bias_pts": -6.9,
+        "spread_bins": {
+            "heavy_away_fav": 0.308,
+            "heavy_home_fav": 0.591,
+            "mod_away_fav": 0.1,
+            "mod_home_fav": 0.791,
+            "slight_away_fav": 0.233,
+            "slight_home_fav": 0.488,
+            "solid_away_fav": 0.375,
+            "solid_home_fav": 0.773
+        },
+        "team_bias": {
+            "BAL": 0.219,
+            "BUF": 0.209,
+            "CHI": 0.227,
+            "IND": -0.209,
+            "LAR": 0.292
+        }
+    }
+}

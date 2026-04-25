@@ -236,6 +236,34 @@ def get_user_performance_data(user_id, selected_seasons):
             merged = pd.merge(merged, df_consensus[['game_id', 'home_pick_pct']], on='game_id', how='left')
         elif 'home_pick_pct' not in merged.columns:
             merged['home_pick_pct'] = 50.0 
+
+        # --- NEW: Fetch and merge Recency Stats ---
+        # 1. Force the main dataframe's game_id to be a string
+        merged['game_id'] = merged['game_id'].astype(str)
+        
+        try:
+            recency_res = supabase_client.table('game_recency_stats') \
+                .select('*') \
+                .in_('season', selected_seasons) \
+                .execute()
+                
+            if recency_res.data:
+                df_recency = pd.DataFrame(recency_res.data)
+                
+                # 2. Force the recency dataframe's game_id to be a string
+                df_recency['game_id'] = df_recency['game_id'].astype(str)
+                
+                # Drop redundant columns so Pandas doesn't create _x and _y duplicates
+                cols_to_drop = ['season', 'week', 'home_team_id', 'away_team_id', 'home_spread']
+                df_recency = df_recency.drop(columns=[c for c in cols_to_drop if c in df_recency.columns])
+                
+                # Merge strictly on the unique game_id
+                merged = pd.merge(merged, df_recency, on='game_id', how='left')
+            else:
+                st.warning("API call succeeded, but the recency table returned 0 rows for these seasons.")
+                
+        except Exception as e:
+            st.warning(f"Could not load recency stats: {e}")
             
         return merged
 
@@ -290,10 +318,10 @@ if supabase_client:
     global_herd_dist = get_global_herd_distribution(selected_seasons)
     df_global_stats = get_global_game_stats(selected_seasons)
 
-    tab1, tab2 = st.tabs(["Spread Analysis", "User Performance"])
+    tab1, tab2 = st.tabs(["User Performance", "Spread Analysis"])
     
     # --- TAB 1: SPREAD ANALYSIS ---
-    with tab1:
+    with tab2:
         st.markdown("### How to use this tab")
         st.markdown("""
         This tab provides a **League-Wide View**. It analyzes how the entire pool behaves against the spread.
@@ -341,7 +369,7 @@ if supabase_client:
                 xOffset='Metric',
                 tooltip=['spread_bin', 'Metric', alt.Tooltip('Pct', format='.1f')]
             ).properties(height=350)
-            st.altair_chart(c1, width="stretch")
+            st.altair_chart(c1, use_container_width=True)
 
             st.subheader("2. Bias Analysis: (User Pick % - Actual Cover %)")
             st.caption("Quantifying the error. Are we consistently wrong about certain spreads?")
@@ -358,20 +386,20 @@ if supabase_client:
                 color=alt.Color('total_games', title='Sample Size', scale=alt.Scale(scheme='greens')),
                 tooltip=['spread_bin', alt.Tooltip('Diff', format='.1f'), 'total_games']
             ).properties(height=350)
-            st.altair_chart(c2, width="stretch")
+            st.altair_chart(c2, use_container_width=True)
             
             with st.expander("View Spread Data Table"):
                 st.dataframe(
                     df_display[['spread_bin', 'total_games', 'pct_picks_home', 'pct_games_home_covered']].rename(columns={
                         'spread_bin': 'Spread', 'pct_picks_home': 'Pick %', 'pct_games_home_covered': 'Cover %'
                     }).style.format({'Pick %': '{:.1f}%', 'Cover %': '{:.1f}%'}),
-                    width='stretch'
+                    use_container_width=True
                 )
         else:
             st.info("No data available for the selected seasons.")
 
     # --- TAB 2: USER PERFORMANCE ---
-    with tab2:
+    with tab1:
         st.markdown("### How to use this tab")
         st.markdown("""
         Use this tab to analyze the picking behavior and performance of individual users, including a "Median Picker" that represents the most popular pick for each game.
@@ -490,7 +518,7 @@ if supabase_client:
                     color=alt.value('white')
                 ).properties(title=display_label, width=60, height=max(500, len(df_user_stats) * 25))
 
-                st.altair_chart(alt.hconcat(bar_chart, text_chart).configure_axis(labelFontSize=12, titleFontSize=14), width="stretch")
+                st.altair_chart(alt.hconcat(bar_chart, text_chart).configure_axis(labelFontSize=12, titleFontSize=14), use_container_width=True)
 
 
                 # =========================================================
@@ -521,7 +549,7 @@ if supabase_client:
                         xOffset='Metric',
                         tooltip=['spread_bin', 'Metric', alt.Tooltip('Pct', format='.1f')]
                     ).properties(height=300)
-                    st.altair_chart(style_grouped, width="stretch")
+                    st.altair_chart(style_grouped, use_container_width=True)
 
                     bias_chart = alt.Chart(u_grouped).mark_bar().encode(
                         x=alt.X('spread_bin', title='Spread Range', sort=alt.EncodingSortField(field="home_spread")),
@@ -529,7 +557,7 @@ if supabase_client:
                         color=alt.Color('Total Games', title='Sample Size', scale=alt.Scale(scheme='greens')),
                         tooltip=['spread_bin', alt.Tooltip('Bias (Diff)', format='.1f'), 'Total Games']
                     ).properties(height=300)
-                    st.altair_chart(bias_chart, width="stretch")
+                    st.altair_chart(bias_chart, use_container_width=True)
                 else:
                     st.info("No games found in this spread range.")
 
@@ -619,7 +647,7 @@ if supabase_client:
                     )
                 )
 
-                st.altair_chart((bars + pool_ticks + dummy_counts).resolve_scale(x='independent'), width="stretch")
+                st.altair_chart((bars + pool_ticks + dummy_counts).resolve_scale(x='independent'), use_container_width=True)
 
                 # =========================================================
                 # 4. HERD MENTALITY (DUAL AXIS)
@@ -744,7 +772,7 @@ if supabase_client:
                             scale=alt.Scale(domain=[0, h_domain_count]))
                 )
                 
-                st.altair_chart((h_chart + h_ticks + h_dummy).resolve_scale(x='independent'), width="stretch")
+                st.altair_chart((h_chart + h_ticks + h_dummy).resolve_scale(x='independent'), use_container_width=True)
 
 
                 # =========================================================
@@ -811,9 +839,93 @@ if supabase_client:
                         x=base_x, y='Value', color=alt.Color('Type', scale=type_scale), tooltip=['season_week_label', 'Type', 'Value']
                     )
 
-                    st.altair_chart((rule_chart + chart_actual + chart_median + chart_user).interactive(), width="stretch")
+                    st.altair_chart((rule_chart + chart_actual + chart_median + chart_user).interactive(), use_container_width=True)
                 else:
                     st.info("No MNF data found for this selection.")
+                    
+                # =========================================================
+                # 6. RECENCY BIAS (MOMENTUM ANALYSIS)
+                # =========================================================
+                st.divider()
+                st.subheader("6. Recency Bias (Momentum Analysis)", anchor="recency-bias-analysis")
+                st.markdown(
+                    "<small>"
+                    "Does this user chase hot teams? This chart analyzes how often the user picks the Home team based on recent momentum. "
+                    "Momentum is calculated using the last 3 games played by each team."
+                    "</small>",
+                    unsafe_allow_html=True
+                )
+
+                # Ensure recency columns exist before trying to chart them
+                if 'home_su_win_pct_l3' in df.columns:
+                    
+                    c_recency_1, c_recency_2 = st.columns([1, 2])
+                    with c_recency_1:
+                        momentum_type = st.radio(
+                            "Select Momentum Metric:", 
+                            options=["Straight Up (Actual Win/Loss)", "Against the Spread (ATS)"]
+                        )
+
+                    # Determine which columns to use based on radio selection
+                    if "Straight Up" in momentum_type:
+                        h_col, a_col = 'home_su_win_pct_l3', 'away_su_win_pct_l3'
+                    else:
+                        h_col, a_col = 'home_ats_win_pct_l3', 'away_ats_win_pct_l3'
+
+                    # Calculate the Delta (Home Win % - Away Win %)
+                    # Possible win % values are 0.0, 0.333, 0.667, 1.0. 
+                    # Max delta is +1.0 (Home 3-0, Away 0-3). Min delta is -1.0.
+                    df['momentum_delta'] = df[h_col] - df[a_col]
+
+                    # Group the deltas into readable bins
+                    def categorize_momentum(delta):
+                        if pd.isna(delta): return "Unknown"
+                        if delta <= -0.5: return "1. Away Heavy Advantage"
+                        if delta < -0.1: return "2. Away Slight Advantage"
+                        if abs(delta) <= 0.1: return "3. Even Matchup"
+                        if delta < 0.5: return "4. Home Slight Advantage"
+                        return "5. Home Heavy Advantage"
+
+                    df['Momentum_Category'] = df['momentum_delta'].apply(categorize_momentum)
+                    
+                    # Group by the category to get pick percentages and cover percentages
+                    recency_grouped = df[df['Momentum_Category'] != "Unknown"].groupby('Momentum_Category').agg(
+                        total_games=('game_id', 'count'),
+                        home_picks=('pick_home', 'sum'),
+                        home_covers=('home_cover', 'sum')
+                    ).reset_index()
+
+                    recency_grouped['User Pick Home %'] = (recency_grouped['home_picks'] / recency_grouped['total_games']) * 100
+                    recency_grouped['Actual Cover %'] = (recency_grouped['home_covers'] / recency_grouped['total_games']) * 100
+                    
+                    # Melt for dual-bar Altair chart
+                    r_melted = recency_grouped.melt(
+                        id_vars=['Momentum_Category', 'total_games'], 
+                        value_vars=['User Pick Home %', 'Actual Cover %'], 
+                        var_name='Metric', 
+                        value_name='Pct'
+                    )
+
+                    st.markdown(f"**User Reaction to {momentum_type} Momentum**")
+                    st.caption("Are they over-picking teams on hot streaks compared to how often those teams actually cover?")
+
+                    recency_chart = alt.Chart(r_melted).mark_bar().encode(
+                        x=alt.X('Momentum_Category:N', title='Momentum Entering Game', axis=alt.Axis(labelAngle=-15)),
+                        y=alt.Y('Pct:Q', title='Percentage', scale=alt.Scale(domain=[0, 100])),
+                        color=alt.Color('Metric:N', scale=alt.Scale(domain=['User Pick Home %', 'Actual Cover %'], range=['#1f77b4', '#ff7f0e'])),
+                        xOffset='Metric:N',
+                        tooltip=[
+                            alt.Tooltip('Momentum_Category:N', title='Advantage'),
+                            alt.Tooltip('Metric:N'),
+                            alt.Tooltip('Pct:Q', format='.1f', title='Percent'),
+                            alt.Tooltip('total_games:Q', title='Sample Size')
+                        ]
+                    ).properties(height=350)
+
+                    st.altair_chart(recency_chart, use_container_width=True)
+
+                else:
+                    st.info("Recency data is not available yet. Make sure the materialized view is refreshed and joined.")
 
             else:
                 st.warning("No data for this user.")
