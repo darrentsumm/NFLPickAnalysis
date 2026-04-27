@@ -43,10 +43,10 @@ class PickerAgent:
         if random.random() < self.forgetfulness_rate:
             self.strikes += 1
             if self.strikes == 1:
-                return "HOME" # Strike 1: Auto-Home
+                return "HOME", 0 
             else:
                 self.is_eliminated = True
-                return "NONE" # Strike 2+: Zeros
+                return "NONE", 0
         
         # 2. If they remembered to pick, calculate the probability of picking Home
         # (We will build out this math next)
@@ -57,9 +57,16 @@ class PickerAgent:
         
         # 3. Make the final choice
         if random.random() < final_prob:
-            return "HOME"
+            pick = "HOME"
         else:
-            return "AWAY"
+            pick = "AWAY"
+        
+        mnf_prediction = 0
+        if game_context.get('is_mnf', False):
+            noise = random.uniform(-2, 2)
+            mnf_prediction = game_context.get('vegas_total', 44.5) + self.mnf_bias_pts + noise
+
+        return pick, round(mnf_prediction)
             
     def _get_bin_probability(self, spread):
         """Helper method to map the current spread to the agent's specific bin"""
